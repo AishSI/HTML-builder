@@ -1,25 +1,26 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const readline = require('readline');
 const { stdin, stdout, exit } = require('process');
 
 const textFile = path.join(__dirname, 'text.txt');
-const output = fs.createWriteStream(textFile, 'utf-8');
+const outputFile = fs.createWriteStream(textFile, 'utf-8');
 
-stdout.write('Hello! Enter your text from a new line:' + os.EOL);
+const rl = readline.createInterface({ input: stdin, output: stdout });
 
-stdin.on('data', (chunk) => {
+rl.output.write('Hello! Enter your text from a new line:' + os.EOL);
+
+rl.on('line', (chunk) => {
   if (chunk.toString().trim() === 'exit') {
     goodbye();
   }
-  output.write(chunk);
+  outputFile.write(chunk + os.EOL);
 });
 
-stdin.on('error', (error) => console.log('Error', error.message));
-
-process.on('SIGINT', goodbye);
+rl.on('SIGINT', goodbye);
 
 function goodbye() {
-  stdout.write('Goodbye!');
+  rl.output.write('Goodbye!');
   exit();
 }
