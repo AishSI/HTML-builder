@@ -1,25 +1,30 @@
 const { stdout } = require('process');
 const os = require('os');
 const fsPromises = require('fs/promises');
-
 const path = require('path');
 const secretFolder = path.join(__dirname, 'secret-folder');
 
-fsPromises
-  .readdir(secretFolder, { withFileTypes: true })
-  .then((result) => {
-    result.forEach((item) => {
-      if (item.isFile()) {
-        let filePath = path.join(secretFolder, item.name);
-        let fileParse = path.parse(filePath);
-        fsPromises.stat(filePath).then((result) => {
-          stdout.write(
-            `${fileParse.name} - ${fileParse.ext.slice(1)} - ${Number(
-              result.size,
-            )}B` + os.EOL,
-          );
-        });
-      }
+async function getFilesInfo() {
+  try {
+    const allOfDir = await fsPromises.readdir(secretFolder, {
+      withFileTypes: true,
     });
-  })
-  .catch((err) => console.error(err));
+    const filesList = allOfDir.filter((item) => !item.isDirectory());
+
+    filesList.forEach(async (file) => {
+      const filePath = path.join(secretFolder, file.name);
+      const fileParse = path.parse(filePath);
+      const fileSize = await fsPromises.stat(filePath);
+
+      stdout.write(
+        `${fileParse.name} - ${fileParse.ext.slice(1)} - ${Number(
+          fileSize.size,
+        )}B${os.EOL}`,
+      );
+    });
+  } catch (error) {
+    stdout.write(`${error}${os.EOL}`);
+  }
+}
+
+getFilesInfo();
